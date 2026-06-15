@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<style>
+body {
+    margin:0;
+    background:#f7f6f2;
+    color:#28251d;
+    font-family:Inter,sans-serif;
+}
+.wrap {
+    max-width:1400px;
+    margin:0 auto;
+    padding:24px;
+}
+h1 {
+    margin:0 0 14px;
+    font-size:clamp(22px,3vw,40px);
+    line-height:1.05;
+}
+.lead {
+    margin:0 0 10px;
+    color:#6f6c65;
+    font-size:16px;
+    max-width:70ch;
+}
+.card {
+    background:#fff;
+    border:1px solid #d7d3cc;
+    border-radius:18px;
+    box-shadow:0 10px 28px rgba(30,24,18,.08);
+}
+.tabs {
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    padding:16px;
+    margin:18px 0;
+}
+button {
+    border:1px solid #d7d3cc;
+    background:#fff;
+    color:#28251d;
+    border-radius:999px;
+    padding:12px 16px;
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+}
+button.active {
+    background:#0b7a7f;
+    color:#fff;
+    border-color:#0b7a7f;
+}
+.grid {
+    display:grid;
+    grid-template-columns:1.7fr .9fr;
+    gap:18px;
+    align-items:start;
+}
+.controls {
+    padding:20px;
+    margin-bottom:18px;
+}
+.controls h2 {
+    margin:0 0 12px;
+    font-size:16px;
+    font-weight:700;
+}
+.mode-grid {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+}
+.group-title {
+    margin:0 0 10px;
+    font-size:13px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:#6f6c65;
+    font-weight:800;
+}
+.stack {
+    display:grid;
+    gap:10px;
+}
+.chart-card {
+    padding:18px;
+}
+#chart {
+    width:100%;
+    height:650px;
+}
+.legend {
+    margin-top:10px;
+    color:#6f6c65;
+    font-size:14px;
+}
+.side {
+    padding:18px;
+    position:sticky;
+    top:20px;
+}
+.side h3 {
+    margin:0 0 14px;
+    font-size:18px;
+}
+.details-hint {
+    margin:-4px 0 14px;
+    color:#6f6c65;
+    font-size:14px;
+    line-height:1.45;
+    max-width:38ch;
+}
+.info {
+    background:#f2efea;
+    border:1px solid #d7d3cc;
+    border-radius:14px;
+    padding:14px;
+    margin-bottom:12px;
+}
+.label {
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:.07em;
+    color:#6f6c65;
+    margin-bottom:6px;
+    font-weight:800;
+}
+.value {
+    font-size:16px;
+    font-weight:600;
+    line-height:1.35;
+    word-break:break-word;
+}
+.value.fragment {
+    font-weight:500;
+    white-space:pre-wrap;
+}
+@media (max-width:980px) {
+    .grid, .mode-grid {
+        grid-template-columns:1fr;
+    }
+    .side {
+        position:static;
+    }
+    #chart {
+        height:520px;
+    }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+    <h1>Акустичні характеристики перемикання мовних кодів</h1>
+    <p class="lead">Вкладки зверху перемикають мовців.</p>
+    <p class="lead">Для кожного мовця можна окремо переглядати середню ЧОТ, середню інтенсивність, а також усереднені значення за мовними кодами.</p>
+    <p class="lead">Натисни на будь-який стовпчик, щоб праворуч побачити його точне значення.</p>
+
+    <div class="tabs card" id="tabs"></div>
+
+    <div class="grid">
+        <div>
+            <div class="controls card">
+                <h2 id="modeTitle">Режим перегляду</h2>
+                <div class="mode-grid" id="modes"></div>
+            </div>
+
+            <div class="chart-card card">
+                <div id="chart"></div>
+                <div class="legend" id="legend"></div>
+            </div>
+        </div>
+
+        <div class="side card">
+            <h3>Деталі вибраного стовпчика</h3>
+            <p class="details-hint">Оберіть стовпчик на діаграмі, щоб переглянути повну інформацію про відповідний запис.</p>
+
+            <div class="info"><div class="label">Мовець</div><div class="value" id="iSpeaker">—</div></div>
+            <div class="info"><div class="label">Аудіозапис / група</div><div class="value" id="iAudio">—</div></div>
+            <div class="info"><div class="label">Мовний код</div><div class="value" id="iLang">—</div></div>
+            <div class="info"><div class="label">Показник</div><div class="value" id="iMetric">—</div></div>
+            <div class="info"><div class="label">Значення</div><div class="value" id="iValue">—</div></div>
+            <div class="info"><div class="label">Текст фрагмента</div><div class="value fragment" id="iFragment">—</div></div>
+        </div>
+    </div>
+</div>
+
+<script>
+const rawData = [{"speaker": "Настя Зухвала", "audio": "Nastya_Zuh.01", "fragment": "Ше ні один мєнєджер не назначив жодного мітінга", "lang": "Суржик", "f0": 283.0, "intensity": 75.0, "recordNum": 1}, {"speaker": "Настя Зухвала", "audio": "Nastya_Zuh.02", "fragment": "З-під завала мене йобне блискавкой, Зєвс такий: \"ти сі вспокоїш чи нє\"", "lang": "Суржик + обсценна лексика", "f0": 362.0, "intensity": 74.0, "recordNum": 2}, {"speaker": "Настя Зухвала", "audio": "Nastya_Zuh.03", "fragment": "Знаєте лі, нема сімпатії", "lang": "Суржик", "f0": 255.5, "intensity": 69.5, "recordNum": 3}, {"speaker": "Настя Зухвала", "audio": "Nastya_Zuh.04", "fragment": "\"Россия не может проиграть, россия не может проиграть\"", "lang": "Російська мова", "f0": 307.8, "intensity": 73.0, "recordNum": 4}, {"speaker": "Настя Зухвала", "audio": "Nastya_Zuh.05", "fragment": "Який некрасівий, але зато який довбойоб", "lang": "Суржик + обсценна лексика", "f0": 232.0, "intensity": 66.6, "recordNum": 5}, {"speaker": "Настя Зухвала", "audio": "Nastya_Zuh.06", "fragment": "Найкраща публіка для бамбьожки живе в Бєлгороді", "lang": "Суржик", "f0": 233.0, "intensity": 70.0, "recordNum": 6}, {"speaker": "Настя Зухвала", "audio": "Nastya_Zuh.07", "fragment": "Якби можна було зробить гєноцид на концерті Баскова - то це и есть русская нирвана", "lang": "Суржик + Російська мова", "f0": 293.5, "intensity": 74.0, "recordNum": 7}, {"speaker": "Настя Зухвала", "audio": "Nastya_Zuh.08", "fragment": "Русская жена ставиться до цього питання по філософськи. Вона така: \"интересно, сколько это в колготках\"", "lang": "Російська мова", "f0": 324.0, "intensity": 71.0, "recordNum": 8}, {"speaker": "Настя Зухвала", "audio": "Nastya_Zuh.09", "fragment": "А кто это у нас тут такой прожорливый?", "lang": "Російська мова", "f0": 576.0, "intensity": 77.0, "recordNum": 9}, {"speaker": "Настя Зухвала", "audio": "Nastya_Zuh.10", "fragment": "Забарікадіровала цей “русский мир”", "lang": "Суржик + Російська мова", "f0": 325.0, "intensity": 74.0, "recordNum": 10}, {"speaker": "Настя Зухвала", "audio": "Nastya_Zuh.11", "fragment": "Я і так не на пікє рєсурса свого", "lang": "Суржик", "f0": 329.0, "intensity": 71.0, "recordNum": 11}, {"speaker": "Настя Зухвала", "audio": "Nastya_Zuh.12", "fragment": "А вот, а может мне кто-то объяснит, а что не так с Дудем?", "lang": "Російська мова", "f0": 474.0, "intensity": 73.0, "recordNum": 12}, {"speaker": "Настя Зухвала", "audio": "Nastya_Zuh.13", "fragment": "Ілон Маск, це шо такоє? Ну.. Можна якось підключить якби ну може якусь там лунную прізму?", "lang": "Суржик", "f0": 324.0, "intensity": 74.5, "recordNum": 13}, {"speaker": "Настя Зухвала", "audio": "Nastya_Zuh.14", "fragment": "Точно! Наверное не все русские такие, наверное нужно как-то с путиным договориться.", "lang": "Російська мова", "f0": 419.0, "intensity": 73.0, "recordNum": 14}, {"speaker": "Настя Зухвала", "audio": "Nastya_Zuh.15", "fragment": "Ми не могли зайти в Інстаграм три дня і вже думали шо нікагда не зайдем, а потім закончілось безлактозне малако", "lang": "Суржик", "f0": 478.0, "intensity": 77.0, "recordNum": 15}, {"speaker": "Настя Зухвала", "audio": "Nastya_Zuh.16", "fragment": "Щоб не писати в Інстаграмі что \"я счастливая мамочка двух ангелочков\"", "lang": "Російська мова", "f0": 325.0, "intensity": 75.0, "recordNum": 16}, {"speaker": "Настя Зухвала", "audio": "Nastya_Zuh.17", "fragment": "Шоб ви розуміли, шо я тоже не пальцом дєлана", "lang": "Суржик", "f0": 260.0, "intensity": 74.0, "recordNum": 17}, {"speaker": "Настя Зухвала", "audio": "Nastya_Zuh.18", "fragment": "Я не рожден для войны", "lang": "Російська мова", "f0": 280.0, "intensity": 74.0, "recordNum": 18}, {"speaker": "Настя Зухвала", "audio": "Nastya_Zuh.19", "fragment": "Якою би я не здавалася вам на сцені, в душі, я оця жіночка з парку з один дома ну", "lang": "Українська мова", "f0": 312.0, "intensity": 73.0, "recordNum": 19}, {"speaker": "Настя Зухвала", "audio": "Nastya_Zuh.20", "fragment": "А пломбір, оо, який був пломбір, не то шо зараз", "lang": "Українська мова", "f0": 315.0, "intensity": 76.0, "recordNum": 20}, {"speaker": "Настя Зухвала", "audio": "Nastya_Zuh.21", "fragment": "Десь через місяць вилізе це вонюче магате зі своїм звітом, де вони напишуть що: \"це був вибух і він був ядерний\"", "lang": "Українська мова", "f0": 306.0, "intensity": 74.0, "recordNum": 21}, {"speaker": "Настя Зухвала", "audio": "Nastya_Zuh.22", "fragment": "Я боюсь шо ми вже за крок до того, шо \"о, я ставлю цій війні нуль балів на тріпедвайзері\"", "lang": "Українська мова", "f0": 355.0, "intensity": 74.0, "recordNum": 22}, {"speaker": "Настя Зухвала", "audio": "Nastya_Zuh.23", "fragment": "Ненавиджу, і Сєрьога кричить: \"не бий, не бий\", а я не хочу бить, я хочу видьоргувать лапи по одній", "lang": "Українська мова", "f0": 369.0, "intensity": 76.0, "recordNum": 23}, {"speaker": "Сергій Ліпко", "audio": "Sergiy_Lip.01", "fragment": "Покурить кальян чи може паржать підем", "lang": "Суржик", "f0": 185.5, "intensity": 80.5, "recordNum": 1}, {"speaker": "Сергій Ліпко", "audio": "Sergiy_Lip.02", "fragment": "Були врємєна о да", "lang": "Суржик", "f0": 241.0, "intensity": 82.0, "recordNum": 2}, {"speaker": "Сергій Ліпко", "audio": "Sergiy_Lip.03", "fragment": "Бля, лучше б ти бухав Сєрьога, це пазор", "lang": "Суржик + обсценна лексика", "f0": 290.0, "intensity": 81.0, "recordNum": 3}, {"speaker": "Сергій Ліпко", "audio": "Sergiy_Lip.04", "fragment": "Я буду вас фоткать і продавать вам діск", "lang": "Суржик", "f0": 196.5, "intensity": 79.0, "recordNum": 4}, {"speaker": "Сергій Ліпко", "audio": "Sergiy_Lip.05", "fragment": "Його онуки казатимуть: \"Dziadku, gdzie byłeś w czasie wojny?\"", "lang": "Інша мова", "f0": 189.5, "intensity": 79.8, "recordNum": 5}, {"speaker": "Сергій Ліпко", "audio": "Sergiy_Lip.06", "fragment": "Бля, братан, триста гривень і свободєн", "lang": "Суржик + обсценна лексика", "f0": 170.0, "intensity": 81.0, "recordNum": 6}, {"speaker": "Сергій Ліпко", "audio": "Sergiy_Lip.07", "fragment": "од'їхав в цю, у кругосвєтню подорож, він вернеться буде сонцестаяніє, уходьте", "lang": "Суржик", "f0": 212.0, "intensity": 80.0, "recordNum": 7}, {"speaker": "Сергій Ліпко", "audio": "Sergiy_Lip.08", "fragment": "Понімаєте, тільки вчора воєнком на взяткі триста гривень поймали", "lang": "Суржик", "f0": 200.0, "intensity": 80.0, "recordNum": 8}, {"speaker": "Сергій Ліпко", "audio": "Sergiy_Lip.09", "fragment": "Буду їхать, зупиняться на блокпосту, казать \"калідор\"", "lang": "Суржик", "f0": 185.0, "intensity": 77.0, "recordNum": 9}, {"speaker": "Сергій Ліпко", "audio": "Sergiy_Lip.10", "fragment": "О, шо це у вас? Нєвская маскарадная?", "lang": "Суржик + Російська мова", "f0": 216.0, "intensity": 80.0, "recordNum": 10}, {"speaker": "Сергій Ліпко", "audio": "Sergiy_Lip.11", "fragment": "І кричать: \"Гусь уйобуй, уйобуй!\"", "lang": "Обсценна лексика", "f0": 384.0, "intensity": 81.0, "recordNum": 11}, {"speaker": "Сергій Ліпко", "audio": "Sergiy_Lip.12", "fragment": "А можете поднять шоб велосипед поискать", "lang": "Суржик + Російська мова", "f0": 197.0, "intensity": 81.0, "recordNum": 12}, {"speaker": "Сергій Ліпко", "audio": "Sergiy_Lip.13", "fragment": "О, бля, оцей у мене вєлік спіздив, оце, атвічаю тупа", "lang": "Суржик + обсценна лексика", "f0": 243.0, "intensity": 81.5, "recordNum": 13}, {"speaker": "Сергій Ліпко", "audio": "Sergiy_Lip.14", "fragment": "Стою перед цим самокатиком і думаю, \"а чи гідний це вчинок військовослужбовця?\"", "lang": "Українська мова", "f0": 207.0, "intensity": 80.0, "recordNum": 14}, {"speaker": "Сергій Ліпко", "audio": "Sergiy_Lip.15", "fragment": "І він каже: \"Так, зараз молодий, молода, ідемте фоткаємося, родичі не йдіть, ви поки постійте тут, поки пофоткаємо молоду, молоду\"", "lang": "Українська мова", "f0": 177.0, "intensity": 79.0, "recordNum": 15}, {"speaker": "Сергій Ліпко", "audio": "Sergiy_Lip.16", "fragment": "Я не можу стверджувати шо це точно він, а ви не можете стверджувати шо ні, хто знає, такі часи були, документи часто губилися", "lang": "Українська мова", "f0": 228.0, "intensity": 81.0, "recordNum": 16}, {"speaker": "Сергій Ліпко", "audio": "Sergiy_Lip.17", "fragment": "Розплющує очі, дивиться на нас, і перше що він каже, це: \"Хлопці, а де мій велосипед?\"", "lang": "Українська мова", "f0": 179.0, "intensity": 78.0, "recordNum": 17}, {"speaker": "Єгор Шатайло", "audio": "Yehor_Shat.01", "fragment": "Хавайте таблєткі або забухайте", "lang": "Суржик", "f0": 245.0, "intensity": 76.0, "recordNum": 1}, {"speaker": "Єгор Шатайло", "audio": "Yehor_Shat.02", "fragment": "Наче ти крутив щьотчікі на камуналку, поняв", "lang": "Суржик", "f0": 187.0, "intensity": 75.0, "recordNum": 2}, {"speaker": "Єгор Шатайло", "audio": "Yehor_Shat.03", "fragment": "Ти панімаєш Єгорчик ... і як ти до цього доєбешся, ти просто молча саглашаєшся з цим", "lang": "Суржик + обсценна лексика", "f0": 199.0, "intensity": 76.0, "recordNum": 3}, {"speaker": "Єгор Шатайло", "audio": "Yehor_Shat.04", "fragment": "Він тягне в тєлєжці своє їбане \"і\"", "lang": "Суржик + обсценна лексика", "f0": 221.0, "intensity": 76.0, "recordNum": 4}, {"speaker": "Єгор Шатайло", "audio": "Yehor_Shat.05", "fragment": "Дайте нам F-16 з ракєтами не в цвєт кузова, всьо харашо", "lang": "Суржик", "f0": 240.0, "intensity": 76.0, "recordNum": 5}, {"speaker": "Єгор Шатайло", "audio": "Yehor_Shat.06", "fragment": "Так, Резніков, давай не это самое бля", "lang": "Російська мова + обсценна лексика", "f0": 228.0, "intensity": 76.0, "recordNum": 6}, {"speaker": "Єгор Шатайло", "audio": "Yehor_Shat.07", "fragment": "Бо якщо ти русскій, який відрізав голову путіну, то тобі вже похуй как сделать умывальник из пластиковой бутылки", "lang": "Російська мова + обсценна лексика", "f0": 233.0, "intensity": 76.5, "recordNum": 7}, {"speaker": "Єгор Шатайло", "audio": "Yehor_Shat.08", "fragment": "Просто берём обычные домашние ножницы и аккуратненько вырезаем голову путину, и в конце у нас должна получиться вот такая вот безделушка. Очень удобно, очень удобно пробрасывать просо", "lang": "Російська мова", "f0": 256.0, "intensity": 77.0, "recordNum": 8}, {"speaker": "Єгор Шатайло", "audio": "Yehor_Shat.09", "fragment": "Просто спроицируй свое желание во вселенную и она его обязательно исполнит", "lang": "Російська мова", "f0": 204.0, "intensity": 77.0, "recordNum": 9}, {"speaker": "Єгор Шатайло", "audio": "Yehor_Shat.10", "fragment": "Сергей Александрович Дедемин чеботарь", "lang": "Російська мова", "f0": 234.0, "intensity": 76.0, "recordNum": 10}, {"speaker": "Єгор Шатайло", "audio": "Yehor_Shat.11", "fragment": "І при чому ти робиш вигляд ніби ніхто навколо не викупає, чому ти такий веселий", "lang": "Українська мова", "f0": 273.0, "intensity": 77.0, "recordNum": 11}, {"speaker": "Єгор Шатайло", "audio": "Yehor_Shat.12", "fragment": "Вони нам допомагають і такі: \"Хей, Україна, а ми демократія, ми тебе підтримаємо! оп, оп, вже не підтримаємо. Я жартую, українець!\"", "lang": "Українська мова", "f0": 257.0, "intensity": 77.0, "recordNum": 12}, {"speaker": "Єгор Шатайло", "audio": "Yehor_Shat.13", "fragment": "Як вам це вдається, пане Байден? Звідки у Вас таке осяйне, стратегічне бачення, пане Байден?", "lang": "Українська мова", "f0": 232.0, "intensity": 76.5, "recordNum": 13}, {"speaker": "Єгор Шатайло", "audio": "Yehor_Shat.14", "fragment": "Все буде на твоїй користі Єгор, да, війна закінчиться швидко, путіна вб`ють свої, шу", "lang": "Українська мова", "f0": 243.0, "intensity": 77.0, "recordNum": 14}];
+const langOrder = ["Українська мова", "Суржик", "Суржик + обсценна лексика", "Суржик + Російська мова", "Російська мова", "Російська мова + обсценна лексика", "Обсценна лексика", "Інша мова"];
+const langColors = {"Українська мова": "#2E86DE", "Суржик": "#F39C12", "Суржик + обсценна лексика": "#E74C3C", "Суржик + Російська мова": "#8E44AD", "Російська мова": "#27AE60", "Російська мова + обсценна лексика": "#C0392B", "Обсценна лексика": "#7F8C8D", "Інша мова": "#16A085"};
+const speakerColors = ["#01696f","#c96f00","#7a39bb","#006494","#437a22","#a13544"];
+const speakers = [...new Set(rawData.map(d => d.speaker))];
+
+let currentTab = speakers[0] || "Порівняння мовців";
+let currentMode = "records_f0";
+
+const modeSets = {
+    speaker: {
+        leftTitle: "ЧОТ",
+        rightTitle: "Інтенсивність",
+        left: [
+            ["records_f0", "Середня ЧОТ"],
+            ["avg_lang_f0", "Середня за мовними кодами"]
+        ],
+        right: [
+            ["records_int", "Середня інтенсивність"],
+            ["avg_lang_int", "Середня за мовними кодами"]
+        ]
+    },
+    compare: {
+        leftTitle: "ЧОТ",
+        rightTitle: "Інтенсивність",
+        left: [
+            ["compare_speakers_f0", "Порівняння мовців"],
+            ["compare_lang_f0", "Середня за мовними кодами"]
+        ],
+        right: [
+            ["compare_speakers_int", "Порівняння мовців"],
+            ["compare_lang_int", "Середня за мовними кодами"]
+        ]
+    }
+};
+
+const byId = id => document.getElementById(id);
+
+function sortLangs(arr) {
+    return arr.slice().sort((a, b) => {
+        const ia = langOrder.indexOf(a), ib = langOrder.indexOf(b);
+        return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib) || a.localeCompare(b, "uk");
+    });
+}
+
+function avg(arr) {
+    arr = arr.filter(v => typeof v === "number" && !Number.isNaN(v));
+    return arr.length ? arr.reduce((a,b) => a+b, 0) / arr.length : null;
+}
+
+function speakerData(name) {
+    return rawData
+        .filter(d => d.speaker === name)
+        .sort((a, b) =>
+            ((langOrder.indexOf(a.lang) === -1 ? 999 : langOrder.indexOf(a.lang)) -
+             (langOrder.indexOf(b.lang) === -1 ? 999 : langOrder.indexOf(b.lang))) ||
+            ((a.recordNum ?? 999999) - (b.recordNum ?? 999999)) ||
+            a.audio.localeCompare(b.audio, "uk")
+        );
+}
+
+function traceRecords(name, key, label) {
+    const d = speakerData(name).filter(x => x[key] != null);
+    return [{
+        x: d.map(x => x.audio),
+        y: d.map(x => x[key]),
+        type: "bar",
+        marker: {color: d.map(x => langColors[x.lang] || "#888")},
+        customdata: d.map(x => ({
+            speaker: x.speaker,
+            audio: x.audio,
+            lang: x.lang,
+            metric: label,
+            value: x[key],
+            fragment: x.fragment || "Текст фрагмента відсутній."
+        })),
+        hovertemplate: "<b>%{x}</b><br>Мовний код: %{customdata.lang}<br>" + label + ": %{y:.2f}<extra></extra>"
+    }];
+}
+
+function traceAvgLang(name, key, label) {
+    const g = {};
+    speakerData(name).forEach(x => {
+        if (x[key] == null) return;
+        if (!g[x.lang]) g[x.lang] = [];
+        g[x.lang].push(x[key]);
+    });
+    const langs = sortLangs(Object.keys(g));
+    const vals = langs.map(l => avg(g[l]));
+    return [{
+        x: langs,
+        y: vals,
+        type: "bar",
+        marker: {color: langs.map(l => langColors[l] || "#888")},
+        customdata: langs.map((l, i) => ({
+            speaker: name,
+            audio: "Середнє за мовним кодом",
+            lang: l,
+            metric: label,
+            value: vals[i],
+            fragment: "Це усереднене значення для мовного коду, тому окремого тексту фрагмента тут немає."
+        })),
+        hovertemplate: "<b>%{x}</b><br>" + label + ": %{y:.2f}<extra></extra>"
+    }];
+}
+
+function traceCompareSpeakers(key, label) {
+    const d = speakers.map((s, i) => {
+        const vals = rawData.filter(x => x.speaker === s && x[key] != null).map(x => x[key]);
+        return {speaker: s, value: avg(vals), color: speakerColors[i % speakerColors.length]};
+    });
+    return [{
+        x: d.map(x => x.speaker),
+        y: d.map(x => x.value),
+        type: "bar",
+        marker: {color: d.map(x => x.color)},
+        customdata: d.map(x => ({
+            speaker: x.speaker,
+            audio: "Загальне середнє мовця",
+            lang: "Усі мовні коди",
+            metric: label,
+            value: x.value,
+            fragment: "Це загальне середнє значення для мовця, тому окремого тексту фрагмента тут немає."
+        })),
+        hovertemplate: "<b>%{x}</b><br>" + label + ": %{y:.2f}<extra></extra>"
+    }];
+}
+
+function traceCompareLangs(key, label) {
+    const g = {};
+    rawData.forEach(x => {
+        if (x[key] == null) return;
+        if (!g[x.lang]) g[x.lang] = [];
+        g[x.lang].push(x[key]);
+    });
+    const langs = sortLangs(Object.keys(g));
+    const vals = langs.map(l => avg(g[l]));
+    return [{
+        x: langs,
+        y: vals,
+        type: "bar",
+        marker: {color: langs.map(l => langColors[l] || "#888")},
+        customdata: langs.map((l, i) => ({
+            speaker: "Усі мовці",
+            audio: "Загальне середнє",
+            lang: l,
+            metric: label,
+            value: vals[i],
+            fragment: "Це усереднене значення для всіх мовців за цим мовним кодом, тому окремого тексту фрагмента тут немає."
+        })),
+        hovertemplate: "<b>%{x}</b><br>" + label + ": %{y:.2f}<extra></extra>"
+    }];
+}
+
+function chartCfg() {
+    const compare = currentTab === "Порівняння мовців";
+
+    if (!compare && currentMode === "records_f0")
+        return ["Середня ЧОТ (Гц)", traceRecords(currentTab, "f0", "Середня ЧОТ (Гц)"), "Аудіозапис", "Середня ЧОТ (Гц)", "Записи впорядковані за мовними кодами."];
+    if (!compare && currentMode === "records_int")
+        return ["Середня інтенсивність (дБ)", traceRecords(currentTab, "intensity", "Середня інтенсивність (дБ)"), "Аудіозапис", "Середня інтенсивність (дБ)", "Записи впорядковані за мовними кодами."];
+    if (!compare && currentMode === "avg_lang_f0")
+        return ["Середня ЧОТ за мовними кодами", traceAvgLang(currentTab, "f0", "Середня ЧОТ (Гц)"), "Мовний код", "Середня ЧОТ (Гц)", "Усереднення для кожного мовного коду."];
+    if (!compare && currentMode === "avg_lang_int")
+        return ["Середня інтенсивність за мовними кодами", traceAvgLang(currentTab, "intensity", "Середня інтенсивність (дБ)"), "Мовний код", "Середня інтенсивність (дБ)", "Усереднення для кожного мовного коду."];
+    if (compare && currentMode === "compare_speakers_f0")
+        return ["Порівняння мовців: середня ЧОТ", traceCompareSpeakers("f0", "Середня ЧОТ (Гц)"), "Мовець", "Середня ЧОТ (Гц)", "Загальні середні значення для кожного мовця."];
+    if (compare && currentMode === "compare_speakers_int")
+        return ["Порівняння мовців: середня інтенсивність", traceCompareSpeakers("intensity", "Середня інтенсивність (дБ)"), "Мовець", "Середня інтенсивність (дБ)", "Загальні середні значення для кожного мовця."];
+    if (compare && currentMode === "compare_lang_f0")
+        return ["Усі мовці: середня ЧОТ за мовними кодами", traceCompareLangs("f0", "Середня ЧОТ (Гц)"), "Мовний код", "Середня ЧОТ (Гц)", "Дані всіх мовців, усереднені за мовними кодами."];
+    return ["Усі мовці: середня інтенсивність за мовними кодами", traceCompareLangs("intensity", "Середня інтенсивність (дБ)"), "Мовний код", "Середня інтенсивність (дБ)", "Дані всіх мовців, усереднені за мовними кодами."];
+}
+
+function setInfo(d) {
+    byId("iSpeaker").textContent = d?.speaker ?? "—";
+    byId("iAudio").textContent = d?.audio ?? "—";
+    byId("iLang").textContent = d?.lang ?? "—";
+    byId("iMetric").textContent = d?.metric ?? "—";
+    byId("iValue").textContent = typeof d?.value === "number" ? d.value.toFixed(2) : "—";
+    byId("iFragment").textContent = d?.fragment ?? "—";
+}
+
+function renderTabs() {
+    const box = byId("tabs");
+    box.innerHTML = "";
+    [...speakers, "Порівняння мовців"].forEach(name => {
+        const b = document.createElement("button");
+        b.textContent = name;
+        b.className = name === currentTab ? "active" : "";
+        b.onclick = () => {
+            currentTab = name;
+            currentMode = name === "Порівняння мовців" ? "compare_speakers_f0" : "records_f0";
+            renderTabs(); renderModes(); renderChart(); setInfo(null);
+        };
+        box.appendChild(b);
+    });
+}
+
+function renderModes() {
+    const compare = currentTab === "Порівняння мовців";
+    const set = compare ? modeSets.compare : modeSets.speaker;
+    byId("modeTitle").textContent = compare ? "Режим перегляду: порівняння мовців" : "Режим перегляду: " + currentTab;
+
+    const wrap = byId("modes");
+    wrap.innerHTML = "";
+
+    [["leftTitle","left"], ["rightTitle","right"]].forEach(([titleKey, listKey]) => {
+        const col = document.createElement("div");
+        const head = document.createElement("div");
+        head.className = "group-title";
+        head.textContent = set[titleKey];
+        const stack = document.createElement("div");
+        stack.className = "stack";
+
+        set[listKey].forEach(([key, label]) => {
+            const b = document.createElement("button");
+            b.textContent = label;
+            b.className = key === currentMode ? "active" : "";
+            b.onclick = () => {
+                currentMode = key;
+                renderModes(); renderChart(); setInfo(null);
+            };
+            stack.appendChild(b);
+        });
+
+        col.appendChild(head);
+        col.appendChild(stack);
+        wrap.appendChild(col);
+    });
+}
+
+function renderChart() {
+    const [title, traces, xTitle, yTitle, legend] = chartCfg();
+
+    Plotly.newPlot("chart", traces, {
+        title: {text: title, x: 0.01, xanchor: "left", font: {size: 20}},
+        paper_bgcolor: "rgba(0,0,0,0)",
+        plot_bgcolor: "rgba(0,0,0,0)",
+        margin: {l: 70, r: 20, t: 70, b: 140},
+        xaxis: {title: xTitle, tickangle: -38, fixedrange: true, showgrid: false, automargin: true},
+        yaxis: {title: yTitle, fixedrange: true, gridcolor: "rgba(40,37,29,.12)"},
+        showlegend: false,
+        dragmode: false,
+        font: {family: "Inter, sans-serif", size: 14, color: "#28251d"}
+    }, {
+        responsive: true,
+        displayModeBar: false,
+        scrollZoom: false,
+        doubleClick: false
+    });
+
+    byId("chart").on("plotly_click", e => setInfo(e.points?.[0]?.customdata || null));
+    byId("legend").textContent = legend;
+}
+
+renderTabs();
+renderModes();
+renderChart();
+setInfo(null);
+</script>
+</body>
+</html>
